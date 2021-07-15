@@ -28,7 +28,7 @@ namespace email
         static string attachmentName = $"{System.AppContext.BaseDirectory}capture.jpeg";
         static string CurrentDirectory = Directory.GetCurrentDirectory();
         static bool camCapture;
-        static string test = System.AppContext.BaseDirectory;
+        static int cameraID;
         static void Main(string[] args)
         {
             IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
@@ -40,7 +40,7 @@ namespace email
             if (camCapture)
             {
                 //start opencv instace
-                VideoCapture capture = new VideoCapture(1);//In my case I had to use video device #1, typically this is Device #0
+                VideoCapture capture = new VideoCapture(cameraID);//In my case I had to use video device #1, typically this is Device #0
                 Mat image = new Mat();
                 //capture image from webcam
                 capture.Read(image);
@@ -100,6 +100,7 @@ namespace email
             using (StreamReader r = new StreamReader($"{System.AppContext.BaseDirectory}\\creds.json"))
             {
                 var json = r.ReadToEnd();
+                //var items = JsonConvert.DeserializeObject<List<Credentials>>(json);
                 var creds = JsonConvert.DeserializeObject<dynamic>(json);
                 fromEmail = creds.fromEmail;
                 emailPassword = creds.emailPassword;
@@ -109,6 +110,7 @@ namespace email
                 subject = creds.subject;
                 emailBody = $"{creds.emailBody}{ Environment.UserName}";
                 camCapture = creds.capture;
+                cameraID = creds.cameraID;
             }
         } 
     }
