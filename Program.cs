@@ -7,53 +7,64 @@ using System.Net.Mail;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using Microsoft.Win32.TaskScheduler;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace email
 {
     class Program
-    {
-        static string fromEmail = "yourfromaddress@gmail.com";
-        static string emailPassword = "yoursmtppasswordhere";
-        static string emailSMTP = "smtp.serverhere.com";
-        static int emailPort = 587;
-        static string toEmail = "toemailaddresshere";
-        static string subject = "Login Alert!";
-        static string emailBody = $"Someone logged into your computer!  The user logged in: {Environment.UserName}";
+    {   //attempt to hide console
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        //set vars
+        static string fromEmail;
+        static string emailPassword;
+        static string emailSMTP;
+        static int emailPort;
+        static string toEmail;
+        static string subject;
+        static string emailBody;
         static string attachmentName = "capture.jpeg";
         static string CurrentDirectory = Directory.GetCurrentDirectory();
         static void Main(string[] args)
         {
-			//create task in Windows Task Scheduler and/or update the entry
+            IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
+            ShowWindow(h, 0);
+
+            parsejson();
+            //create task in Windows Task Scheduler and/or update the entry
             createtask();
-			//start opencv instace
-            VideoCapture capture = new VideoCapture(1); //In my case I had to use video device #1, typically this is Device #0
+
+            //start opencv instace
+            VideoCapture capture = new VideoCapture(1);//In my case I had to use video device #1, typically this is Device #0
             Mat image = new Mat();
-			//capture image from webcam
+            //capture image from webcam
             capture.Read(image);
-			//load image into a bitmap
+            //load image into a bitmap
             Bitmap img = MatToBitmap(image);
-			//save image
+            //save image
             img.Save(attachmentName, ImageFormat.Jpeg);
-			
-			//begin email setup
+
+            //begin email setup
             MailMessage msg = new MailMessage(
                     fromEmail,
                     toEmail,
                     subject,
                     emailBody
             );
-			//add attachment to email
+            //add attachment to email
             msg.Attachments.Add(new Attachment(attachmentName));
-			//set smtp credentials and port
+            //set smtp credentials and port
             SmtpClient client = new SmtpClient(emailSMTP) { 
                 Port = emailPort,
                 EnableSsl = true,
                 Credentials = new NetworkCredential(fromEmail, emailPassword),
             };
-			//send email
+            //send email
             client.Send(msg);
         }
-		//convert mat image and return a bitmap
+        //convert mat image and return a bitmap
         private static Bitmap MatToBitmap(Mat mat)
         {
             using (var ms = mat.ToMemoryStream())
@@ -76,5 +87,22 @@ namespace email
             const string taskname = "email on Login";
             TaskService.Instance.RootFolder.RegisterTaskDefinition(taskname, td);
         }
+        //read data from creds.json
+        private static void parsejson()
+        {
+            using (StreamReader r = new StreamReader("creds.json"))
+            {
+                var json = r.ReadToEnd();
+                //var items = JsonConvert.DeserializeObject<List<Credentials>>(json);
+                var creds = JsonConvert.DeserializeObject<dynamic>(json);
+                fromEmail = creds.fromEmail;
+                emailPassword = creds.emailPassword;
+                emailSMTP = creds.emailSMTP;
+                emailPort = creds.emailPort;
+                toEmail = creds.toEmail;
+                subject = creds.subject;
+                emailBody = $"{creds.emailBody}{ Environment.UserName}";
+            }
+        } 
     }
 }
