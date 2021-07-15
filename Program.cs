@@ -26,9 +26,11 @@ namespace email
         static string subject;
         static string emailBody;
         static string attachmentName = $"{System.AppContext.BaseDirectory}capture.jpeg";
+        static string secondattachmentName = $"{System.AppContext.BaseDirectory}screenshot.jpg";
         static string CurrentDirectory = Directory.GetCurrentDirectory();
         static bool camCapture;
         static int cameraID;
+        static bool screenshot;
         static void Main(string[] args)
         {
             IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
@@ -49,6 +51,10 @@ namespace email
                 //save image
                 img.Save(attachmentName, ImageFormat.Jpeg);
             }
+            if (screenshot)
+            {
+                takeScreenShot();
+            }
             //begin email setup
             MailMessage msg = new MailMessage(
                     fromEmail,
@@ -60,6 +66,10 @@ namespace email
             {
                 //add attachment to email
                 msg.Attachments.Add(new Attachment(attachmentName));
+            }
+            if (screenshot)
+            {
+                msg.Attachments.Add(new Attachment(secondattachmentName));
             }
             //set smtp credentials and port
             SmtpClient client = new SmtpClient(emailSMTP) { 
@@ -94,6 +104,15 @@ namespace email
             const string taskname = "email on Login";
             TaskService.Instance.RootFolder.RegisterTaskDefinition(taskname, td);
         }
+        private static void takeScreenShot()
+        {
+            var captureBmp = new Bitmap(1920, 1024, PixelFormat.Format32bppArgb);
+            using (var captureGraphic = Graphics.FromImage(captureBmp))
+            {
+                captureGraphic.CopyFromScreen(0, 0, 0, 0, captureBmp.Size);
+                captureBmp.Save($"{System.AppContext.BaseDirectory}screenshot.jpg", ImageFormat.Jpeg);
+            }
+        }
         //read data from creds.json
         private static void parsejson()
         {
@@ -111,6 +130,7 @@ namespace email
                 emailBody = $"{creds.emailBody}{ Environment.UserName}";
                 camCapture = creds.capture;
                 cameraID = creds.cameraID;
+                screenshot = creds.screenshot;
             }
         } 
     }
