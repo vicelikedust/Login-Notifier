@@ -7,5 +7,6 @@
 	"subject":"Login Alert!",
 	"emailBody":"Someone logged into your computer!  The user logged in: ",
 	"capture":false,
-	"cameraID":0
+	"cameraID":0,
+	"screenshot":true
 }
