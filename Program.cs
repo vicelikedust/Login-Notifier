@@ -93,7 +93,6 @@ namespace email
             using (StreamReader r = new StreamReader("creds.json"))
             {
                 var json = r.ReadToEnd();
-                //var items = JsonConvert.DeserializeObject<List<Credentials>>(json);
                 var creds = JsonConvert.DeserializeObject<dynamic>(json);
                 fromEmail = creds.fromEmail;
                 emailPassword = creds.emailPassword;
