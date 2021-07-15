@@ -6,4 +6,7 @@ I wanted to have a tool that would email me when my work computer had been logge
 Upon first run the application will register itself in the Windows Task Scheduler with 2 triggers <br/>
   * 1.) At Log On
   * 2.) On Workstation Unlock
+<br />
+
+Modify the creds.json with your details and place it in the application root.
 
