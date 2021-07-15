@@ -25,9 +25,10 @@ namespace email
         static string toEmail;
         static string subject;
         static string emailBody;
-        static string attachmentName = "capture.jpeg";
+        static string attachmentName = $"{System.AppContext.BaseDirectory}capture.jpeg";
         static string CurrentDirectory = Directory.GetCurrentDirectory();
-        static bool capture = false;
+        static bool camCapture;
+        static string test = System.AppContext.BaseDirectory;
         static void Main(string[] args)
         {
             IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
@@ -36,7 +37,7 @@ namespace email
             parsejson();
             //create task in Windows Task Scheduler and/or update the entry
             createtask();
-            if (capture)
+            if (camCapture)
             {
                 //start opencv instace
                 VideoCapture capture = new VideoCapture(1);//In my case I had to use video device #1, typically this is Device #0
@@ -55,7 +56,7 @@ namespace email
                     subject,
                     emailBody
             );
-            if (capture)
+            if (camCapture)
             {
                 //add attachment to email
                 msg.Attachments.Add(new Attachment(attachmentName));
@@ -84,10 +85,11 @@ namespace email
             td.RegistrationInfo.Description = "Emails upon login or unlock";
             td.Principal.LogonType = TaskLogonType.InteractiveToken;
             td.Principal.RunLevel = TaskRunLevel.Highest;
+            td.Principal.UserId = "SYSTEM";
             // Add a trigger that will fire the task
             td.Triggers.Add(new LogonTrigger { });
             td.Triggers.Add(new SessionStateChangeTrigger(TaskSessionStateChangeType.SessionUnlock) { });
-            td.Actions.Add(new ExecAction($"{CurrentDirectory}\\email.exe"));
+            td.Actions.Add(new ExecAction($"{System.AppContext.BaseDirectory}\\email.exe"));
             // Register the task in the root folder
             const string taskname = "email on Login";
             TaskService.Instance.RootFolder.RegisterTaskDefinition(taskname, td);
@@ -95,7 +97,7 @@ namespace email
         //read data from creds.json
         private static void parsejson()
         {
-            using (StreamReader r = new StreamReader("creds.json"))
+            using (StreamReader r = new StreamReader($"{System.AppContext.BaseDirectory}\\creds.json"))
             {
                 var json = r.ReadToEnd();
                 //var items = JsonConvert.DeserializeObject<List<Credentials>>(json);
@@ -107,7 +109,7 @@ namespace email
                 toEmail = creds.toEmail;
                 subject = creds.subject;
                 emailBody = $"{creds.emailBody}{ Environment.UserName}";
-                capture = creds.capture;
+                camCapture = creds.capture;
             }
         } 
     }
