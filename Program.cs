@@ -27,6 +27,7 @@ namespace email
         static string emailBody;
         static string attachmentName = "capture.jpeg";
         static string CurrentDirectory = Directory.GetCurrentDirectory();
+        static bool capture = false;
         static void Main(string[] args)
         {
             IntPtr h = Process.GetCurrentProcess().MainWindowHandle;
@@ -35,17 +36,18 @@ namespace email
             parsejson();
             //create task in Windows Task Scheduler and/or update the entry
             createtask();
-
-            //start opencv instace
-            VideoCapture capture = new VideoCapture(1);//In my case I had to use video device #1, typically this is Device #0
-            Mat image = new Mat();
-            //capture image from webcam
-            capture.Read(image);
-            //load image into a bitmap
-            Bitmap img = MatToBitmap(image);
-            //save image
-            img.Save(attachmentName, ImageFormat.Jpeg);
-
+            if (capture)
+            {
+                //start opencv instace
+                VideoCapture capture = new VideoCapture(1);//In my case I had to use video device #1, typically this is Device #0
+                Mat image = new Mat();
+                //capture image from webcam
+                capture.Read(image);
+                //load image into a bitmap
+                Bitmap img = MatToBitmap(image);
+                //save image
+                img.Save(attachmentName, ImageFormat.Jpeg);
+            }
             //begin email setup
             MailMessage msg = new MailMessage(
                     fromEmail,
@@ -53,8 +55,11 @@ namespace email
                     subject,
                     emailBody
             );
-            //add attachment to email
-            msg.Attachments.Add(new Attachment(attachmentName));
+            if (capture)
+            {
+                //add attachment to email
+                msg.Attachments.Add(new Attachment(attachmentName));
+            }
             //set smtp credentials and port
             SmtpClient client = new SmtpClient(emailSMTP) { 
                 Port = emailPort,
@@ -93,6 +98,7 @@ namespace email
             using (StreamReader r = new StreamReader("creds.json"))
             {
                 var json = r.ReadToEnd();
+                //var items = JsonConvert.DeserializeObject<List<Credentials>>(json);
                 var creds = JsonConvert.DeserializeObject<dynamic>(json);
                 fromEmail = creds.fromEmail;
                 emailPassword = creds.emailPassword;
@@ -101,6 +107,7 @@ namespace email
                 toEmail = creds.toEmail;
                 subject = creds.subject;
                 emailBody = $"{creds.emailBody}{ Environment.UserName}";
+                capture = creds.capture;
             }
         } 
     }
