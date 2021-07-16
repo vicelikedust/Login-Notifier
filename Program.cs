@@ -23,6 +23,7 @@ namespace email
         static string emailPassword;
         static string emailSMTP;
         static int emailPort;
+        static bool usessl;
         static string toEmail;
         static string subject;
         static string emailBody;
@@ -80,7 +81,7 @@ namespace email
             //set smtp credentials and port
             SmtpClient client = new SmtpClient(emailSMTP) { 
                 Port = emailPort,
-                EnableSsl = true,
+                EnableSsl = usessl,
                 Credentials = new NetworkCredential(fromEmail, emailPassword),
             };
             //send email
@@ -134,6 +135,7 @@ namespace email
                 emailPassword = creds.emailPassword;
                 emailSMTP = creds.emailSMTP;
                 emailPort = creds.emailPort;
+                usessl = creds.usessl;
                 toEmail = creds.toEmail;
                 subject = creds.subject;
                 emailBody = $"{creds.emailBody}{ Environment.UserName}";

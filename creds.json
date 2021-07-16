@@ -3,6 +3,7 @@
 	"emailPassword":"youremailpassword",
 	"emailSMTP":"yoursmtpserverhere",
 	"emailPort":587,
+	"usessl":true,
 	"toEmail":"receiveremail@gmail.com",
 	"subject":"Login Alert!",
 	"emailBody":"Someone logged into your computer!  The user logged in: ",
